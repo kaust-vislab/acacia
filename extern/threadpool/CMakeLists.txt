@@ -1,0 +1,1 @@
+add_library(threadpool STATIC threadpool.c threadpool.h)
