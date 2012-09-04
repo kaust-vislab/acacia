@@ -1,3 +1,4 @@
 build
 xcode
 __pycache__
+*.pyc
