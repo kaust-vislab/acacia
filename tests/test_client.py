@@ -13,13 +13,13 @@ import zmq
 
 def dummy_readdir(desired):
     ctx = zmq.Context()
-    sock = ctx.socket(zmq.REP)
+    sock = ctx.socket(zmq.DEALER)
     sock.bind('tcp://*:6767')
     req = sock.recv_json()
-    print req
     assert req == {'readdir': {'dir': '.'}}
     req['result'] = desired
     sock.send_json(req)
+    sock.send_json({'shutdown': 'now'})
 
 
 def test_readdir():

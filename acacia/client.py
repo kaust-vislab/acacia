@@ -17,7 +17,7 @@ class ReaderInterface(Thread):
         Thread.__init__(self)
         self.readdir_rep = ctx.socket(zmq.REP)
         self.readdir_rep.bind('inproc://readdir')
-        self.dealer = ctx.socket(zmq.REQ)
+        self.dealer = ctx.socket(zmq.DEALER)
         self.dealer.connect(url)
 
     def run(self):
@@ -25,10 +25,7 @@ class ReaderInterface(Thread):
         poller = zmq.Poller()
         poller.register(self.readdir_rep, zmq.POLLIN)
         poller.register(self.dealer, zmq.POLLIN)
-        # hacky
-        i = 0
-        while i < 2:
-            i = i + 1
+        while True:
             socks = dict(poller.poll())
             if self.readdir_rep in socks:
                 if socks[self.readdir_rep] == zmq.POLLIN:
@@ -36,8 +33,10 @@ class ReaderInterface(Thread):
                     self.dealer.send(query)
             elif self.dealer in socks:
                 if socks[self.dealer] == zmq.POLLIN:
-                    res = self.dealer.recv()
-                    self.readdir_rep.send(res)
+                    res = self.dealer.recv_json()
+                    if res == {'shutdown': 'now'}:
+                        break
+                    self.readdir_rep.send_json(res)
 
 
 class Reader(object):
